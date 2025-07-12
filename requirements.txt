@@ -1,0 +1,5 @@
+groq>=0.4.0
+python-dotenv>=1.0.0
+flask>=2.3.0
+textblob>=0.17.1
+bootstrap-flask>=2.2.0

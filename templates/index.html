@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Text Summarizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">AI Text Summarizer</a>
+            <div class="navbar-nav">
+                <a class="nav-link active" href="/">Home</a>
+                <a class="nav-link" href="/about">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1 class="text-center">AI Text Summarizer</h1>
+        <p class="text-center text-muted">Enhanced with Sentiment Analysis & Keyword Extraction</p>
+        {% if agent_initialized %}
+        <form id="summarizeForm">
+            <div class="mb-3">
+                <label for="textInput" class="form-label">Text to Summarize</label>
+                <textarea class="form-control" id="textInput" rows="5" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="styleSelect" class="form-label">Summary Style</label>
+                <select class="form-select" id="styleSelect">
+                    <option value="professional">Professional</option>
+                    <option value="casual">Casual</option>
+                    <option value="bullet_points">Bullet Points</option>
+                    <option value="technical">Technical</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="maxLengthInput" class="form-label">Max Length (Words)</label>
+                <input type="number" class="form-control" id="maxLengthInput" min="10" max="1000" placeholder="Optional">
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="includeSentimentCheck" checked>
+                <label class="form-check-label" for="includeSentimentCheck">Include Sentiment Analysis</label>
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="includeKeywordsCheck" checked>
+                <label class="form-check-label" for="includeKeywordsCheck">Include Keyword Extraction</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Summarize</button>
+        </form>
+        <hr>
+        <div id="resultContainer" style="display: none;">
+            <h2>Summary Result</h2>
+            <div class="alert alert-success" id="summaryText"></div>
+            <div>
+                <h4>Metadata</h4>
+                <ul>
+                    <li>Original Length: <span id="originalLength"></span> words</li>
+                    <li>Summary Length: <span id="summaryLength"></span> words</li>
+                    <li>Compression Ratio: <span id="compressionRatio"></span>x</li>
+                    <li>Style: <span id="summaryStyle"></span></li>
+                    <li>Time: <span id="summaryTime"></span></li>
+                </ul>
+            </div>
+            <div id="sentimentContainer" style="display: none;">
+                <h4>Sentiment Analysis</h4>
+                <div class="alert" id="sentimentLabel"></div>
+                <ul>
+                    <li>Polarity: <span id="polarity"></span></li>
+                    <li>Subjectivity: <span id="subjectivity"></span></li>
+                    <li id="sentimentDescription"></li>
+                </ul>
+            </div>
+            <div id="keywordsContainer" style="display: none;">
+                <h4>Keywords</h4>
+                <ul id="keywordsList"></ul>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-danger">AI Agent not initialized. Please check the server logs for more details.</div>
+        {% endif %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#summarizeForm').submit(function(event) {
+                event.preventDefault();
+                const text = $('#textInput').val();
+                const style = $('#styleSelect').val();
+                const maxLength = $('#maxLengthInput').val();
+                const includeSentiment = $('#includeSentimentCheck').is(":checked");
+                const includeKeywords = $('#includeKeywordsCheck').is(":checked");
+
+                $.ajax({
+                    url: '/api/summarize',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        text: text,
+                        style: style,
+                        max_length: maxLength,
+                        include_sentiment: includeSentiment,
+                        include_keywords: includeKeywords
+                    }),
+                    success: function(response) {
+                        $('#resultContainer').show();
+                        $('#summaryText').text(response.summary);
+                        $('#originalLength').text(response.metadata.original_length);
+                        $('#summaryLength').text(response.metadata.summary_length);
+                        $('#compressionRatio').text(response.metadata.compression_ratio);
+                        $('#summaryStyle').text(response.metadata.style);
+                        $('#summaryTime').text(response.metadata.timestamp);
+
+                        if (response.sentiment_analysis) {
+                            $('#sentimentContainer').show();
+                            $('#sentimentLabel').text(response.sentiment_analysis.emoji + ' ' + response.sentiment_analysis.sentiment.toUpperCase());
+                            $('#sentimentLabel').addClass('alert-' + response.sentiment_analysis.color);
+                            $('#polarity').text(response.sentiment_analysis.polarity);
+                            $('#subjectivity').text(response.sentiment_analysis.subjectivity);
+                            $('#sentimentDescription').text(response.sentiment_analysis.description);
+                        } else {
+                            $('#sentimentContainer').hide();
+                        }
+
+                        if (response.keywords) {
+                            $('#keywordsContainer').show();
+                            $('#keywordsList').empty();
+                            response.keywords.forEach(keyword => {
+                                $('#keywordsList').append('<li>' + keyword + '</li>')
+                            });
+                        } else {
+                            $('#keywordsContainer').hide();
+                        }
+                    },
+                    error: function(xhr) {
+                        alert('Error: ' + xhr.responseJSON.error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
