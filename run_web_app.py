@@ -88,7 +88,7 @@ def main():
     # Import and run the Flask app
     try:
         from app import app
-        app.run(debug=True, host='0.0.0.0', port=5000)
+        app.run( host='0.0.0.0', port=8000)
     except KeyboardInterrupt:
         print("\n👋 Shutting down gracefully...")
     except Exception as e:
