@@ -358,4 +358,4 @@ if __name__ == '__main__':
         print("   2. Set up your .env file with GROQ_API_KEY")
         print("   3. Downloaded TextBlob corpora: python -m textblob.download_corpora")
     
-    app.run(debug=True, port=5000)
+    app.run(port=8000)
