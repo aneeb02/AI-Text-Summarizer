@@ -7,7 +7,6 @@ from datetime import datetime
 import traceback
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 # Initialize Bootstrap
 bootstrap = Bootstrap5(app)
